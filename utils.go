@@ -25,28 +25,26 @@ func GetResults(q string) []map[string]interface{} {
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
+
+	// Send request
 	resp, err := client.Do(req)
 	if err != nil {
 		panic(err)
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
+
+	// Parse content into map
 	contents, _, _, _ := jsonparser.Get(body, "contents", "sectionListRenderer", "contents", "[0]", "itemSectionRenderer", "contents")
 	var data []map[string]interface{}
 	json.Unmarshal(contents, &data)
 	return data
 }
 
-func GetBestThumb(list []byte) string {
-	var list_ []interface{}
-	var hq int
-	json.Unmarshal(list, &list_)
-	hq = len(list_) - 1
-	return list_[hq].(map[string]interface{})["url"].(string)
-}
-
 func ParseData(data map[string]interface{}) (YTSearchResult, error) {
 	vdata, _ := json.Marshal(data)
+
+	// Fields
 	videoId, _ := jsonparser.GetString(vdata, "compactVideoRenderer", "videoId")
 	if videoId == "" {
 		return YTSearchResult{}, errors.New("videoId not found")
@@ -58,6 +56,13 @@ func ParseData(data map[string]interface{}) (YTSearchResult, error) {
 	channel, _ := jsonparser.GetString(vdata, "compactVideoRenderer", "longBylineText", "runs", "[0]", "text")
 	channelId, _ := jsonparser.GetString(vdata, "compactVideoRenderer", "longBylineText", "runs", "[0]", "navigationEndpoint", "browseEndpoint", "browseId")
 	tlist, _, _, _ := jsonparser.Get(vdata, "compactVideoRenderer", "thumbnail", "thumbnails")
+	
+	// Get best quality thumbnail
+	var list_ []interface{}
+	var hq int
+	json.Unmarshal(tlist, &list_)
+	hq = len(list_) - 1
+	thumbNail := list_[hq].(map[string]interface{})["url"].(string)
 
-	return YTSearchResult{Title: title, VideoId: videoId, PublishTime: publishedTime, Channel: channel, ChannelId: channelId, Views: viewCount, Duration: duration, Thumbnail: GetBestThumb(tlist)}, nil
+	return YTSearchResult{Title: title, VideoId: videoId, PublishTime: publishedTime, Channel: channel, ChannelId: channelId, Views: viewCount, Duration: duration, Thumbnail: thumbNail}, nil
 }
