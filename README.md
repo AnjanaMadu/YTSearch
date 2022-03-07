@@ -11,8 +11,9 @@ go get github.com/AnjanaMadu/YTSearch
 package main
 
 import (
-    "fmt",
-    "github.com/AnjanaMadu/YTSearch"
+    "fmt"
+    
+    ytsearch "github.com/AnjanaMadu/YTSearch"
 )
 
 func main() {
